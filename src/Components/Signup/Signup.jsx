@@ -1,33 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState , useContext  } from 'react';
+import { FirebaseContext } from '../../store/FirebaseContext'
 import Logo from '../../olx-logo.png';
 import './Signup.css';
-
+import { toast } from 'react-toastify'
+import { Link, useNavigate } from 'react-router-dom';
+import {createUserWithEmailAndPassword , getAuth, updateProfile } from 'firebase/auth'
+import { addDoc, collection } from 'firebase/firestore';
 export default function Signup() {
   const [ userData , setUserData ] = useState({
     userName : '',
     email : '',
     mobilNumber : '',
     password : ''
-  })
+  });
+  const { db } = useContext( FirebaseContext );
+  const navigate = useNavigate()
+  const auth = getAuth();
   function handilChanges( event ){
     const { name , value } = event.target;
     setUserData((data) =>({
       ...data , 
       [name] : value
-  }))
+  }));
   }
+  const handilSubmishion = ( event ) =>{
+    event.preventDefault();
+    const { userName , email , mobilNumber , password } = userData
+    let userNameRegex =  /^(?=[a-zA-Z0-9._]{3,16}$)(?!.*[_.]{2})[^_.].*[^_.]$/;
+    let emailRegex =  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const phoneRegex = /^(\+\d{1,3}[- ]?)?\d{10}$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+    if( !userNameRegex.test(userName)){
+      return toast.error( 'Enter Valid User Name')
+    }
+    if( !emailRegex.test( email ) ){
+      return toast.error (" Enter Valid Email ")
+    }
+    if( !phoneRegex.test(mobilNumber) ){
+      return toast.error('Enter Valid Number')
+    }
+    if(  password.trim() == '' || password.length < 5 ){ 
+      return toast.error('Enter Secure Password ')
+    }
+    createUserWithEmailAndPassword( auth , email , password)
+    .then( (userCredential)=>{
+      const user = userCredential.user;
+      return updateProfile( user , {
+         displayName:userName
+      })
+    }).then(()=>{
+      addDoc(collection(db,'users'),{
+        id:auth.currentUser.uid,
+        userName :userName,
+        mobilNumber :mobilNumber
+      })
+    }).then(()=>{
+      navigate('/login')
+  }).catch((error)=>{
+      if(error.code == 'auth/email-already-in-use'){
+        toast.error('Email already in use')
+      }else{
+        console.log(error);
+         toast.error('server under maintainence')
+      }
+    })
+
+
+  }
+
   return (
     <div>
       <div className="signupParentDiv">
         <img width="200px" height="200px" src={Logo}></img>
-        <form>
+        <form onSubmit={handilSubmishion} >
           <label htmlFor="fname">Username</label>
           <br />
           <input
             className="input"
             type="text"
-            id="fname"
-            name="name"
+            id="userName"
+            name="userName"
            value={userData.name}
            onChange={handilChanges}
           />
@@ -37,7 +90,7 @@ export default function Signup() {
           <input
             className="input"
             type="email"
-            id="fname"
+            id="email"
             name="email"
             value={userData.email}
             onChange={handilChanges}
@@ -48,7 +101,7 @@ export default function Signup() {
           <input
             className="input"
             type="text"
-            id="lname"
+            id="mobilNumber"
             name="mobilNumber"
             value={userData.mobilNumber}
            onChange={handilChanges}
@@ -59,16 +112,16 @@ export default function Signup() {
           <input
             className="input"
             type="password"
-            id="lname"
+            id="password"
             name="password"
             value={userData.password}
            onChange={handilChanges}
           />
           <br />
           <br />
-          <button>Signup</button>
+          <button type='submit' >Signup</button>
         </form>
-        <a>Login</a>
+        < Link to={'/login'} ><span>Login</span></Link>
       </div>
     </div>
   );
