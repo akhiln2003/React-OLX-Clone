@@ -26,10 +26,9 @@ export default function Signup() {
   const handilSubmishion = ( event ) =>{
     event.preventDefault();
     const { userName , email , mobilNumber , password } = userData
-    let userNameRegex =  /^(?=[a-zA-Z0-9._]{3,16}$)(?!.*[_.]{2})[^_.].*[^_.]$/;
-    let emailRegex =  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const userNameRegex =  /^(?=[a-zA-Z0-9._]{3,16}$)(?!.*[_.]{2})[^_.].*[^_.]$/;
+    const emailRegex =  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const phoneRegex = /^(\+\d{1,3}[- ]?)?\d{10}$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
     if( !userNameRegex.test(userName)){
       return toast.error( 'Enter Valid User Name')
@@ -40,7 +39,7 @@ export default function Signup() {
     if( !phoneRegex.test(mobilNumber) ){
       return toast.error('Enter Valid Number')
     }
-    if(  password.trim() == '' || password.length < 5 ){ 
+    if(  password.trim() == '' || password.length < 8 ){ 
       return toast.error('Enter Secure Password ')
     }
     createUserWithEmailAndPassword( auth , email , password)
